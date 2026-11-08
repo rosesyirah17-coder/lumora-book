@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#eef2e9">
+  <title>Lumora Book — A Little World of Stories</title>
+
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+<div id="app">
+
+  <!-- WELCOME SCREEN -->
+  <section class="intro" v-if="!entered">
+    <div class="intro-content">
+      <div class="brand-mark">L<span>✿</span></div>
+      <p class="eyebrow">A LITTLE WORLD OF STORIES</p>
+
+      <h1>Turn a page.<br><em>Find your wonder.</em></h1>
+
+      <p class="intro-text">
+        A quiet corner for beautiful stories, curious minds
+        and adventures waiting to unfold.
+      </p>
+
+      <button class="enter-btn" @click="enterWebsite">
+        ENTER THE LIBRARY <span>↗</span>
+      </button>
+
+      <p class="intro-small">Curated stories for curious hearts</p>
+    </div>
+
+    <div class="intro-art">
+      <div class="art-orbit orbit-one"></div>
+      <div class="art-orbit orbit-two"></div>
+      <div class="intro-book">
+        <span class="book-flower">✿</span>
+        <small>THE LUMORA EDITION</small>
+        <h2>Stories<br>to Keep</h2>
+        <span class="book-line"></span>
+        <small>VOL. 01 · A WORLD OF WONDER</small>
+      </div>
+      <span class="sparkle sparkle-one">✧</span>
+      <span class="sparkle sparkle-two">✦</span>
+      <span class="sparkle sparkle-three">✿</span>
+    </div>
+  </section>
+
+  <!-- MAIN WEBSITE -->
+  <div v-else class="site-shell">
+
+    <header class="site-header">
+      <button class="logo" @click="goTo('home')" aria-label="Lumora Book home">
+        <span class="logo-symbol">L</span>
+        <span class="logo-name">LUMORA<small>BOOKS & STORIES</small></span>
+      </button>
+
+      <nav class="main-nav">
+        <button :class="{active:page==='home'}" @click="goTo('home')">Home</button>
+        <button :class="{active:page==='discover'}" @click="goTo('discover')">Discover</button>
+        <button :class="{active:page==='library'}" @click="goTo('library')">My Library</button>
+        <button :class="{active:page==='favorites'}" @click="goTo('favorites')">
+          <span>♡</span> Favorites
+        </button>
+      </nav>
+
+      <div class="header-note">READ · DREAM · REPEAT</div>
+    </header>
+
+    <main>
+
+      <!-- HOME HERO -->
+      <section class="hero" v-if="page==='home'">
+        <div class="hero-copy">
+          <p class="eyebrow">WELCOME TO YOUR STORY SANCTUARY</p>
+          <h1>Somewhere between<br>the pages, <em>magic begins.</em></h1>
+          <p class="hero-description">
+            Discover lovely reads, collect your favourites
+            and find a new world to fall into.
+          </p>
+
+          <div class="hero-actions">
+            <button class="primary-btn" @click="goTo('discover')">
+              Explore the collection <span>↗</span>
+            </button>
+            <span class="hero-caption">A thoughtful collection of stories</span>
+          </div>
+        </div>
+
+        <div class="hero-visual">
+          <div class="hero-sun"></div>
+          <div class="hero-flower flower-a">✿</div>
+          <div class="hero-flower flower-b">✧</div>
+          <div class="hero-stack">
+            <div class="stack-book stack-back"></div>
+            <div class="stack-book stack-middle"></div>
+            <div class="stack-book stack-front">
+              <span>✿</span>
+              <small>LUMORA COLLECTION</small>
+              <strong>THE ART OF<br>IMAGINATION</strong>
+              <i>little stories, endless worlds</i>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SEARCH -->
+      <section class="search-section">
+        <div>
+          <p class="eyebrow">THE NEXT CHAPTER</p>
+          <h2>Find a story to love.</h2>
+        </div>
+
+        <div class="search-box">
+          <span class="search-icon">⌕</span>
+          <input
+            v-model="searchText"
+            type="search"
+            placeholder="Search by title, author or keyword..."
+            @keyup.enter="searchBooks">
+          <button @click="searchBooks">Search <span>↗</span></button>
+        </div>
+      </section>
+
+      <!-- CATEGORIES -->
+      <section class="category-section">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">A SHELF FOR EVERY MOOD</p>
+            <h2>Explore by category</h2>
+          </div>
+          <span class="section-aside">CHOOSE YOUR NEXT ADVENTURE</span>
+        </div>
+
+        <div class="category-list">
+          <button
+            v-for="cat in categories"
+            :key="cat.name"
+            :class="{selected:selectedCategory===cat.name}"
+            @click="chooseCategory(cat)">
+            <span class="category-icon">{{cat.icon}}</span>
+            {{cat.name}}
+          </button>
+        </div>
+      </section>
+
+      <!-- BOOK COLLECTION -->
+      <section class="books-section">
+        <div class="section-heading book-heading">
+          <div>
+            <p class="eyebrow">{{page==='library'?'YOUR PERSONAL COLLECTION':page==='favorites'?'SAVED WITH LOVE':'THE LUMORA BOOKSHELF'}}</p>
+            <h2>
+              {{page==='library'?'My Library':page==='favorites'?'Your Favourites':selectedCategory==='All Books'?'Stories to discover':selectedCategory}}
+            </h2>
+          </div>
+          <span class="book-count" v-if="!loading">{{visibleBooks.length}} BOOKS</span>
+        </div>
+
+        <div v-if="loading" class="loading-state">
+          <div class="loading-flower">✿</div>
+          <p>Gathering stories for you...</p>
+        </div>
+
+        <div class="book-grid" v-else-if="visibleBooks.length">
+          <article class="book-card" v-for="book in visibleBooks" :key="book.id">
+            <div class="cover">
+              <img
+                :src="book.cover || fallbackCover"
+                :alt="book.title + ' book cover'"
+                @error="handleCoverError">
+
+              <span class="source-tag">{{book.source}}</span>
+
+              <button
+                class="heart"
+                :class="{hearted:isFavorite(book)}"
+                @click="toggleFavorite(book)"
+                :aria-label="isFavorite(book)?'Remove from favourites':'Add to favourites'">
+                {{isFavorite(book)?'♥':'♡'}}
+              </button>
+            </div>
+
+            <div class="book-info">
+              <p class="book-category">{{book.category || 'LUMORA PICK'}}</p>
+              <h3>{{book.title}}</h3>
+              <p class="book-author">{{book.author}}</p>
+
+              <div class="book-actions">
+                <button class="read-btn" @click="startReading(book)">
+                  {{book.readUrl?'Read online ↗':'View book ↗'}}
+                </button>
+                <button
+                  class="save-btn"
+                  :class="{saved:inLibrary(book)}"
+                  @click="toggleLibrary(book)">
+                  {{inLibrary(book)?'✓ Saved':'＋ Save'}}
+                </button>
+              </div>
+
+              <button class="details-btn" @click="selectedBook=book">
+                Book details
+              </button>
+            </div>
+          </article>
+        </div>
+
+        <div v-else class="empty-state">
+          <span>✿</span>
+          <h3>No stories on this shelf yet</h3>
+          <p>Try another category or search for a different title.</p>
+          <button class="secondary-btn" @click="resetCollection">Explore all books</button>
+        </div>
+
+        <div class="more-area" v-if="!loading && page!=='library' && page!=='favorites' && books.length">
+          <button class="more-btn" @click="loadMore" :disabled="loadingMore">
+            {{loadingMore?'Finding more stories...':'Discover more books ↓'}}
+          </button>
+        </div>
+
+        <p class="error-note" v-if="apiMessage">{{apiMessage}}</p>
+      </section>
+
+      <!-- SMALL FOOTER FEATURE -->
+      <section class="quote-strip" v-if="page==='home'">
+        <span>✧</span>
+        <p>“A book is a little door to somewhere wonderful.”</p>
+        <small>THE LUMORA READING ROOM</small>
+      </section>
+
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-brand">
+        <span class="footer-symbol">L✿</span>
+        <strong>LUMORA BOOK</strong>
+        <p>Little stories. Endless possibilities.</p>
+      </div>
+
+      <div class="footer-bottom">
+        <span>© 2026 LUMORA BOOK</span>
+        <span>MADE FOR THE LOVE OF READING</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- BOOK DETAILS MODAL -->
+  <div class="modal" v-if="selectedBook" @click.self="selectedBook=null">
+    <div class="modal-content">
+      <button class="close" @click="selectedBook=null" aria-label="Close">×</button>
+
+      <div class="modal-cover">
+        <img
+          :src="selectedBook.cover || fallbackCover"
+          :alt="selectedBook.title + ' book cover'"
+          @error="handleCoverError">
+      </div>
+
+      <div class="modal-details">
+        <p class="eyebrow">A LITTLE MORE ABOUT THIS BOOK</p>
+        <h2>{{selectedBook.title}}</h2>
+        <p class="modal-author">By {{selectedBook.author}}</p>
+        <p class="modal-description">
+          {{selectedBook.description || 'Discover this title and explore its story.'}}
+        </p>
+        <div class="modal-meta">
+          <span>{{selectedBook.source}}</span>
+          <span>{{selectedBook.category || 'BOOK COLLECTION'}}</span>
+        </div>
+
+        <button class="primary-btn modal-read" @click="startReading(selectedBook)">
+          {{selectedBook.readUrl?'Start reading':'View book details'}} ↗
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" v-if="toast">{{toast}}</div>
+
+</div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="firebase.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
